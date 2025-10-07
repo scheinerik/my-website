@@ -157,16 +157,29 @@ export default function Schedule() {
               </div>
 
               {hours.map((_, index) => {
+                const hasEventCovering = dayEvents.some((ev) => {
+                  const start = parseInt(ev.start.split(":")[0]);
+                  const end = parseInt(ev.end.split(":")[0]);
+                  return index >= start && index < end;
+                });
+              
+                if (hasEventCovering) {
+                  // Skip rendering this cell — event covers it
+                  return null;
+                }
+              
                 const isPast =
                   isCurrentMonth &&
                   (day < currentManilaDay ||
                     (day === currentManilaDay && index < currentManilaHour));
+                  
                 const cellClasses = [
                   "grid-hour",
                   index < 8 ? "sleep-cell" : "",
                   isPast ? "past-cell" : "",
                   isWeekend ? "weekend-cell" : "",
                 ].join(" ");
+              
                 return <div key={index} className={cellClasses}></div>;
               })}
 
