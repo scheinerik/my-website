@@ -163,3 +163,11 @@
   background-color: rgba(0, 128, 0, 0.25) !important;
   font-weight: 600;
 }
+
+.sleep-col,
+.sleep-cell {
+  background-color: #f3f3f3 !important;
+  color: #666;
+  font-style: italic;
+  text-align: center;
+}

@@ -135,7 +135,10 @@ export default function Schedule() {
           <thead>
             <tr>
               <th>Day</th>
-              {hours.map((hour) => (
+              <th className="sleep-col" colSpan={8}>
+                Sleep
+              </th>
+              {hours.slice(8).map((hour) => (
                 <th key={hour}>{hour}</th>
               ))}
             </tr>
@@ -147,6 +150,7 @@ export default function Schedule() {
                 [0, 6].includes(
                   new Date(currentYear, currentMonth, day).getDay()
                 ); // Sunday(0) or Saturday(6)
+
               return (
                 <tr
                   key={day}
@@ -159,31 +163,41 @@ export default function Schedule() {
                     {monthName.slice(0, 3)} {day}
                   </td>
 
-                  {hours.map((_, hourIndex) => {
+                  {/* Sleep Column */}
+                  <td
+                    className="sleep-cell"
+                    colSpan={8}
+                  >
+                    😴 Sleep
+                  </td>
+
+                  {/* Daytime hours */}
+                  {hours.slice(8).map((_, hourIndex) => {
+                    const actualHour = hourIndex + 8; // since we sliced
                     const match = events.find(
                       (ev) =>
                         ev.day === day &&
                         ev.year === currentYear &&
                         ev.month === currentMonth &&
-                        hourIndex >= parseInt(ev.start.split(":")[0]) &&
-                        hourIndex < parseInt(ev.end.split(":")[0])
+                        actualHour >= parseInt(ev.start.split(":")[0]) &&
+                        actualHour < parseInt(ev.end.split(":")[0])
                     );
 
                     const isPast =
                       isCurrentMonth &&
                       (day < currentManilaDay ||
                         (day === currentManilaDay &&
-                          hourIndex < currentManilaHour));
+                          actualHour < currentManilaHour));
 
                     return (
                       <td
-                        key={hourIndex}
+                        key={actualHour}
                         className={`schedule-cell 
                           ${isPast ? "past-cell" : ""} 
                           ${isWeekend ? "weekend-cell" : ""}`}
                       >
                         {match &&
-                          hourIndex === parseInt(match.start.split(":")[0]) && (
+                          actualHour === parseInt(match.start.split(":")[0]) && (
                             <div
                               className="event-block"
                               style={{
