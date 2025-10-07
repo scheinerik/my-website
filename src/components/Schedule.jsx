@@ -203,7 +203,9 @@ export default function Schedule() {
                             className="event-block"
                             style={{
                               gridColumn: `span ${span}`,
-                              width: `${span * 70}px`,
+                              left: 0,
+                              right: 0,
+                              height: "100%",
                             }}
                             onDoubleClick={() =>
                               handleDeleteEvent(match.id)
