@@ -74,14 +74,12 @@
 
 /* Left column label cell */
 .grid-label {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 8px 10px;
-  font-weight: 600;
-  color: var(--label-color);
-  border-right: 1px solid var(--grid-border);
-  background: #fff;
+  background: #161b22;
+  padding-right: 8px;
+  text-align: right;
+  font-weight: 500;
+  color: #8b949e;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Header hour cells */
@@ -164,13 +162,16 @@
   font-size: 0.85rem;
   display: flex;
   align-items: center;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  justify-content: center;
   white-space: nowrap;
-  pointer-events: auto; /* allow dblclick to delete */
+  text-overflow: ellipsis;
+  height: 100%;
+  padding: 0 5px;
+  cursor: pointer;
+  z-index: 2;
 }
 
-/* Form section */
+/* Form */
 .event-form-section {
   margin-top: 16px;
   padding: 12px;

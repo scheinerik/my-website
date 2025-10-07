@@ -164,13 +164,6 @@ export default function Sections() {
             new Date(currentYear, currentMonth, day).getDay()
           );
 
-          const dayEvents = events.filter(
-            (ev) =>
-              ev.day === day &&
-              ev.year === currentYear &&
-              ev.month === currentMonth
-          );
-
           return (
             <div
               key={day}
@@ -209,42 +202,29 @@ export default function Sections() {
                 return <div key={index} className={cellClasses} />;
               })}
 
-              {/* Event blocks (positioned with minute-precision across 24h) */}
-              {dayEvents.map((ev) => {
-                const [sh, sm] = ev.start.split(":").map(Number);
-                const [eh, em] = ev.end.split(":").map(Number);
-
-                // Calculate start and end in minutes
-                const startMin = sh * 60 + (sm || 0);
-                const endMin = eh * 60 + (em || 0);
-                if (endMin <= startMin) return null;
-
-                // Convert to grid columns (1-based, first column is label)
-                // Each hour is a column, so minute precision is mapped to fractional columns
-                const startCol = 2 + startMin / 60; // 2 = skip label column
-                const endCol = 2 + endMin / 60;
-
-                return (
-                  <div
-                    key={ev.id}
-                    className="event-block"
-                    style={{
-                      gridColumn: `${startCol} / ${endCol}`,
-                      zIndex: 2,
-                      top: 4,
-                      height: "calc(100% - 8px)",
-                      position: "absolute",
-                    }}
-                    title={`${ev.title} (${ev.start}–${ev.end})`}
-                    onDoubleClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteEvent(ev.id);
-                    }}
-                  >
-                    {ev.title || `${ev.start}–${ev.end}`}
-                  </div>
-                );
-              })}
+              {events
+                .filter(
+                  (ev) =>
+                    ev.day === day &&
+                    ev.year === currentYear &&
+                    ev.month === currentMonth
+                )
+                .map((ev) => {
+                  const startHour = parseInt(ev.start.split(":")[0]);
+                  const endHour = parseInt(ev.end.split(":")[0]);
+                  return (
+                    <div
+                      key={ev.id}
+                      className="event-block"
+                      style={{
+                        gridColumn: `${startHour + 2} / ${endHour + 2}`,
+                      }}
+                      onDoubleClick={() => handleDeleteEvent(ev.id)}
+                    >
+                      {ev.title}
+                    </div>
+                  );
+                })}
             </div>
           );
         })}
@@ -266,6 +246,7 @@ export default function Sections() {
               }
               required
             />
+
             <div className="time-inputs">
               <label>Start:</label>
               <input
@@ -286,6 +267,7 @@ export default function Sections() {
                 required
               />
             </div>
+
             <button type="submit">Add Event</button>
           </form>
         </div>
