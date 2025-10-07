@@ -143,13 +143,19 @@ export default function Schedule() {
           <tbody>
             {Array.from({ length: daysInMonth }, (_, i) => {
               const day = i + 1;
+              const isWeekend =
+                [0, 6].includes(
+                  new Date(currentYear, currentMonth, day).getDay()
+                ); // Sunday(0) or Saturday(6)
               return (
                 <tr
                   key={day}
                   onClick={() => handleSelectDay(day)}
                   className={selectedDay === day ? "selected-day" : ""}
                 >
-                  <td className="day-label">
+                  <td
+                    className={`day-label ${isWeekend ? "weekend-day" : ""}`}
+                  >
                     {monthName.slice(0, 3)} {day}
                   </td>
 
@@ -172,27 +178,32 @@ export default function Schedule() {
                     return (
                       <td
                         key={hourIndex}
-                        className={`schedule-cell ${isPast ? "past-cell" : ""}`}
+                        className={`schedule-cell 
+                          ${isPast ? "past-cell" : ""} 
+                          ${isWeekend ? "weekend-cell" : ""}`}
                       >
-                        {match && hourIndex === parseInt(match.start.split(":")[0]) && (
-                          <div
-                            className="event-block"
-                            style={{
-                              gridColumn: `span ${
-                                parseInt(match.end.split(":")[0]) -
-                                parseInt(match.start.split(":")[0])
-                              }`,
-                              width: `${
-                                (parseInt(match.end.split(":")[0]) -
-                                  parseInt(match.start.split(":")[0])) *
-                                70
-                              }px`,
-                            }}
-                            onDoubleClick={() => handleDeleteEvent(match.id)}
-                          >
-                            {match.title}
-                          </div>
-                        )}
+                        {match &&
+                          hourIndex === parseInt(match.start.split(":")[0]) && (
+                            <div
+                              className="event-block"
+                              style={{
+                                gridColumn: `span ${
+                                  parseInt(match.end.split(":")[0]) -
+                                  parseInt(match.start.split(":")[0])
+                                }`,
+                                width: `${
+                                  (parseInt(match.end.split(":")[0]) -
+                                    parseInt(match.start.split(":")[0])) *
+                                  70
+                                }px`,
+                              }}
+                              onDoubleClick={() =>
+                                handleDeleteEvent(match.id)
+                              }
+                            >
+                              {match.title}
+                            </div>
+                          )}
                       </td>
                     );
                   })}

@@ -148,9 +148,18 @@
 
 .past-cell {
   background-color: #e0e0e0 !important;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .past-cell:hover {
-  opacity: 0.8;
+  opacity: 0.6;
+}
+
+.weekend-cell {
+  background-color: rgba(0, 128, 0, 0.2) !important;
+}
+
+.weekend-day {
+  background-color: rgba(0, 128, 0, 0.25) !important;
+  font-weight: 600;
 }
