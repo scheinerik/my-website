@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import "../styles/Schedule.css";
 
 export default function Schedule() {
-  // 🕐 Get Manila time
   const getManilaTime = () => {
     const now = new Date();
     return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
@@ -19,15 +18,13 @@ export default function Schedule() {
     end: "11:00",
   });
 
-  // 🕒 Update Manila time every minute
+  // Update Manila time every minute
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(getManilaTime());
-    }, 60000);
+    const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // 🟢 Load all events from Cloudflare D1
+  // Load events
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -70,14 +67,13 @@ export default function Schedule() {
     setFormData({ title: "", start: "10:00", end: "11:00" });
   };
 
-  // 🟢 Add new event
+  // Add event
   const addEvent = (e) => {
     e.preventDefault();
     if (!selectedDay) return alert("Please select a day first.");
 
     const [sh] = formData.start.split(":").map(Number);
     const [eh] = formData.end.split(":").map(Number);
-
     if (eh <= sh) return alert("End time must be after start time.");
 
     const newEvent = {
@@ -105,7 +101,7 @@ export default function Schedule() {
       .catch((err) => console.error("Failed to save event:", err));
   };
 
-  // 🗑️ Delete event
+  // Delete event
   const handleDeleteEvent = (id) => {
     if (!window.confirm("Delete this event?")) return;
     fetch(`/api/events?id=${id}`, { method: "DELETE" })
@@ -127,12 +123,14 @@ export default function Schedule() {
       <div className="schedule-grid-wrapper">
         <div className="schedule-grid-header">
           <div className="grid-label">Day</div>
-          <div className="grid-hour sleep-hour" style={{ gridColumn: "span 8" }}>
-            Sleep
-          </div>
-          {hours.slice(8).map((hour) => (
-            <div key={hour} className="grid-hour">
-              {hour}
+          {hours.map((hour) => (
+            <div
+              key={hour}
+              className={`grid-hour ${
+                parseInt(hour) < 8 ? "sleep-hour" : ""
+              }`}
+            >
+              {parseInt(hour) < 8 ? "Sleep" : hour}
             </div>
           ))}
         </div>
@@ -157,25 +155,23 @@ export default function Schedule() {
                 {monthName.slice(0, 3)} {day}
               </div>
 
-              <div className="grid-hour sleep-cell" style={{ gridColumn: "span 8" }}></div>
-
-              {hours.slice(8).map((_, index) => {
-                const actualHour = index + 8;
+              {hours.map((_, index) => {
                 const isPast =
                   isCurrentMonth &&
                   (day < currentManilaDay ||
-                    (day === currentManilaDay && actualHour < currentManilaHour));
+                    (day === currentManilaDay && index < currentManilaHour));
 
                 const cellClasses = [
                   "grid-hour",
+                  index < 8 ? "sleep-cell" : "",
                   isPast ? "past-cell" : "",
                   isWeekend ? "weekend-cell" : "",
                 ].join(" ");
 
-                return <div key={actualHour} className={cellClasses}></div>;
+                return <div key={index} className={cellClasses}></div>;
               })}
 
-              {/* Render events */}
+              {/* Events */}
               {events
                 .filter(
                   (ev) =>
@@ -191,7 +187,7 @@ export default function Schedule() {
                       key={ev.id}
                       className="event-block"
                       style={{
-                        gridColumn: `${startHour - 7} / ${endHour - 7}`,
+                        gridColumn: `${startHour + 2} / ${endHour + 2}`,
                       }}
                       onDoubleClick={() => handleDeleteEvent(ev.id)}
                     >
