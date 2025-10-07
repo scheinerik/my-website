@@ -36,14 +36,18 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.schedule-grid-header,
-.schedule-grid-row {
+.schedule-grid-header {
   display: grid;
   grid-template-columns: 120px repeat(24, 1fr);
   min-height: 35px;
   position: relative;
 }
-
+.schedule-grid-row {
+  display: grid;
+  grid-template-columns: 120px repeat(24, 1fr);
+  align-items: center;
+  position: relative;
+}
 .grid-label {
   background: #161b22;
   padding-right: 8px;
@@ -89,9 +93,6 @@
 
 /* Event block */
 .event-block {
-  position: absolute;
-  top: 0;
-  bottom: 0;
   background: rgba(88, 166, 255, 0.35);
   border-left: 3px solid #58a6ff;
   border-radius: 4px;
@@ -100,9 +101,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  height: 100%;
+  padding: 0 5px;
+  cursor: pointer;
+  z-index: 2;
 }
 
 /* Form */

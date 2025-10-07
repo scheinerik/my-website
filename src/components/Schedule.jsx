@@ -18,13 +18,11 @@ export default function Schedule() {
     end: "11:00",
   });
 
-  // Update Manila time every minute
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Load events
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -67,7 +65,6 @@ export default function Schedule() {
     setFormData({ title: "", start: "10:00", end: "11:00" });
   };
 
-  // Add event
   const addEvent = (e) => {
     e.preventDefault();
     if (!selectedDay) return alert("Please select a day first.");
@@ -101,7 +98,6 @@ export default function Schedule() {
       .catch((err) => console.error("Failed to save event:", err));
   };
 
-  // Delete event
   const handleDeleteEvent = (id) => {
     if (!window.confirm("Delete this event?")) return;
     fetch(`/api/events?id=${id}`, { method: "DELETE" })
@@ -126,9 +122,7 @@ export default function Schedule() {
           {hours.map((hour) => (
             <div
               key={hour}
-              className={`grid-hour ${
-                parseInt(hour) < 8 ? "sleep-hour" : ""
-              }`}
+              className={`grid-hour ${parseInt(hour) < 8 ? "sleep-hour" : ""}`}
             >
               {parseInt(hour) < 8 ? "Sleep" : hour}
             </div>
@@ -160,18 +154,15 @@ export default function Schedule() {
                   isCurrentMonth &&
                   (day < currentManilaDay ||
                     (day === currentManilaDay && index < currentManilaHour));
-
                 const cellClasses = [
                   "grid-hour",
                   index < 8 ? "sleep-cell" : "",
                   isPast ? "past-cell" : "",
                   isWeekend ? "weekend-cell" : "",
                 ].join(" ");
-
                 return <div key={index} className={cellClasses}></div>;
               })}
 
-              {/* Events */}
               {events
                 .filter(
                   (ev) =>
