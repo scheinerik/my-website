@@ -70,18 +70,15 @@ export default function Schedule() {
     setFormData({ title: "", start: "10:00", end: "11:00" });
   };
 
-  // 🟢 Add new event to D1
+  // 🟢 Add new event
   const addEvent = (e) => {
     e.preventDefault();
     if (!selectedDay) return alert("Please select a day first.");
 
-    const [sh, sm] = formData.start.split(":").map(Number);
-    const [eh, em] = formData.end.split(":").map(Number);
-    const startIndex = sh;
-    const endIndex = eh + (em > 0 ? 1 : 0);
+    const [sh] = formData.start.split(":").map(Number);
+    const [eh] = formData.end.split(":").map(Number);
 
-    if (endIndex <= startIndex)
-      return alert("End time must be after start time.");
+    if (eh <= sh) return alert("End time must be after start time.");
 
     const newEvent = {
       year: currentYear,
@@ -108,15 +105,12 @@ export default function Schedule() {
       .catch((err) => console.error("Failed to save event:", err));
   };
 
-  // 🗑️ Delete an event from D1
+  // 🗑️ Delete event
   const handleDeleteEvent = (id) => {
     if (!window.confirm("Delete this event?")) return;
-
     fetch(`/api/events?id=${id}`, { method: "DELETE" })
       .then((res) => res.json())
-      .then(() => {
-        setEvents((prev) => prev.filter((e) => e.id !== id));
-      })
+      .then(() => setEvents((prev) => prev.filter((e) => e.id !== id)))
       .catch((err) => console.error("Failed to delete event:", err));
   };
 
@@ -130,98 +124,84 @@ export default function Schedule() {
         <button onClick={() => changeMonth(1)}>→</button>
       </div>
 
-      <div className="table-wrapper">
-        <table className="schedule-table">
-          <thead>
-            <tr>
-              <th>Day</th>
-              <th className="sleep-col" colSpan={8}>
-                Sleep
-              </th>
-              {hours.slice(8).map((hour) => (
-                <th key={hour}>{hour}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: daysInMonth }, (_, i) => {
-              const day = i + 1;
-              const isWeekend =
-                [0, 6].includes(
-                  new Date(currentYear, currentMonth, day).getDay()
-                ); // Sunday(0) or Saturday(6)
+      <div className="schedule-grid-wrapper">
+        <div className="schedule-grid-header">
+          <div className="grid-label">Day</div>
+          <div className="grid-hour sleep-hour" style={{ gridColumn: "span 8" }}>
+            Sleep
+          </div>
+          {hours.slice(8).map((hour) => (
+            <div key={hour} className="grid-hour">
+              {hour}
+            </div>
+          ))}
+        </div>
 
-              return (
-                <tr
-                  key={day}
-                  onClick={() => handleSelectDay(day)}
-                  className={selectedDay === day ? "selected-day" : ""}
-                >
-                  <td
-                    className={`day-label ${isWeekend ? "weekend-day" : ""}`}
-                  >
-                    {monthName.slice(0, 3)} {day}
-                  </td>
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const isWeekend = [0, 6].includes(
+            new Date(currentYear, currentMonth, day).getDay()
+          );
 
-                  {/* Sleep Column */}
-                  <td className="sleep-cell" colSpan={8}>
-                  </td>
+          return (
+            <div
+              key={day}
+              className={`schedule-grid-row ${
+                selectedDay === day ? "selected-day" : ""
+              }`}
+              onClick={() => handleSelectDay(day)}
+            >
+              <div
+                className={`grid-label ${isWeekend ? "weekend-day" : ""}`}
+              >
+                {monthName.slice(0, 3)} {day}
+              </div>
 
-                  {/* Daytime hours */}
-                  {hours.slice(8).map((_, hourIndex) => {
-                    const actualHour = hourIndex + 8; // adjust index
-                    const match = events.find(
-                      (ev) =>
-                        ev.day === day &&
-                        ev.year === currentYear &&
-                        ev.month === currentMonth &&
-                        actualHour >= parseInt(ev.start.split(":")[0]) &&
-                        actualHour < parseInt(ev.end.split(":")[0])
-                    );
+              <div className="grid-hour sleep-cell" style={{ gridColumn: "span 8" }}></div>
 
-                    const isPast =
-                      isCurrentMonth &&
-                      (day < currentManilaDay ||
-                        (day === currentManilaDay &&
-                          actualHour < currentManilaHour));
+              {hours.slice(8).map((_, index) => {
+                const actualHour = index + 8;
+                const isPast =
+                  isCurrentMonth &&
+                  (day < currentManilaDay ||
+                    (day === currentManilaDay && actualHour < currentManilaHour));
 
-                    const startHour = match
-                      ? parseInt(match.start.split(":")[0])
-                      : 0;
-                    const endHour = match ? parseInt(match.end.split(":")[0]) : 0;
-                    const span = endHour - startHour;
+                const cellClasses = [
+                  "grid-hour",
+                  isPast ? "past-cell" : "",
+                  isWeekend ? "weekend-cell" : "",
+                ].join(" ");
 
-                    return (
-                      <td
-                        key={actualHour}
-                        className={`schedule-cell 
-                          ${isPast ? "past-cell" : ""} 
-                          ${isWeekend ? "weekend-cell" : ""}`}
-                      >
-                        {match && actualHour === startHour && (
-                          <div
-                            className="event-block"
-                            style={{
-                              gridColumn: `span ${span}`,
-                              left: 0,
-                              right: 0,
-                              height: "100%",
-                            }}
-                            onDoubleClick={() =>
-                              handleDeleteEvent(match.id)
-                            }
-                          >
-                            {match.title}
-                          </div>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return <div key={actualHour} className={cellClasses}></div>;
+              })}
+
+              {/* Render events */}
+              {events
+                .filter(
+                  (ev) =>
+                    ev.day === day &&
+                    ev.year === currentYear &&
+                    ev.month === currentMonth
+                )
+                .map((ev) => {
+                  const startHour = parseInt(ev.start.split(":")[0]);
+                  const endHour = parseInt(ev.end.split(":")[0]);
+                  return (
+                    <div
+                      key={ev.id}
+                      className="event-block"
+                      style={{
+                        gridColumn: `${startHour - 7} / ${endHour - 7}`,
+                      }}
+                      onDoubleClick={() => handleDeleteEvent(ev.id)}
+                    >
+                      {ev.title}
+                    </div>
+                  );
+                })}
+            </div>
+          );
+        })}
       </div>
 
       {selectedDay && (
