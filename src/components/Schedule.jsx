@@ -2,19 +2,32 @@ import React, { useState, useEffect } from "react";
 import "../styles/Schedule.css";
 
 export default function Schedule() {
-  const today = new Date();
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  // 🕐 Get Manila time
+  const getManilaTime = () => {
+    const now = new Date();
+    return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  };
+
+  const [currentTime, setCurrentTime] = useState(getManilaTime());
+  const [currentMonth, setCurrentMonth] = useState(currentTime.getMonth());
+  const [currentYear, setCurrentYear] = useState(currentTime.getFullYear());
   const [selectedDay, setSelectedDay] = useState(null);
+  const [events, setEvents] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
     start: "10:00",
     end: "11:00",
   });
 
-  const [events, setEvents] = useState([]);
+  // 🕒 Update Manila time every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(getManilaTime());
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
-  // 🟢 Load events from Cloudflare D1 API on mount
+  // 🟢 Load all events from Cloudflare D1
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -29,6 +42,12 @@ export default function Schedule() {
   const hours = Array.from({ length: 24 }, (_, i) =>
     i.toString().padStart(2, "0") + ":00"
   );
+
+  const currentManilaDay = currentTime.getDate();
+  const currentManilaHour = currentTime.getHours();
+  const isCurrentMonth =
+    currentYear === currentTime.getFullYear() &&
+    currentMonth === currentTime.getMonth();
 
   const changeMonth = (offset) => {
     let newMonth = currentMonth + offset;
@@ -51,7 +70,7 @@ export default function Schedule() {
     setFormData({ title: "", start: "10:00", end: "11:00" });
   };
 
-  // 🟢 Add event to D1 database via /api/events
+  // 🟢 Add new event to D1
   const addEvent = (e) => {
     e.preventDefault();
     if (!selectedDay) return alert("Please select a day first.");
@@ -59,7 +78,7 @@ export default function Schedule() {
     const [sh, sm] = formData.start.split(":").map(Number);
     const [eh, em] = formData.end.split(":").map(Number);
     const startIndex = sh;
-    const endIndex = eh + (em > 0 ? 1 : 0); // approximate to full hour
+    const endIndex = eh + (em > 0 ? 1 : 0);
 
     if (endIndex <= startIndex)
       return alert("End time must be after start time.");
@@ -73,26 +92,31 @@ export default function Schedule() {
       title: formData.title,
     };
 
-    // Save to Cloudflare backend
     fetch("/api/events", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newEvent),
     })
       .then((res) => res.json())
-      .then(() => {
-        // Add to state for instant display
-        setEvents((prev) => [...prev, newEvent]);
+      .then((data) => {
+        setEvents((prev) => [
+          ...prev,
+          { ...newEvent, id: data.id || Date.now() },
+        ]);
         setSelectedDay(null);
       })
       .catch((err) => console.error("Failed to save event:", err));
   };
 
+  // 🗑️ Delete an event from D1
   const handleDeleteEvent = (id) => {
     if (!window.confirm("Delete this event?")) return;
+
     fetch(`/api/events?id=${id}`, { method: "DELETE" })
       .then((res) => res.json())
-      .then(() => setEvents((prev) => prev.filter((e) => e.id !== id)))
+      .then(() => {
+        setEvents((prev) => prev.filter((e) => e.id !== id));
+      })
       .catch((err) => console.error("Failed to delete event:", err));
   };
 
@@ -135,13 +159,21 @@ export default function Schedule() {
                         ev.day === day &&
                         ev.year === currentYear &&
                         ev.month === currentMonth &&
-                        hourIndex >=
-                          parseInt(ev.start.split(":")[0]) &&
+                        hourIndex >= parseInt(ev.start.split(":")[0]) &&
                         hourIndex < parseInt(ev.end.split(":")[0])
                     );
 
+                    const isPast =
+                      isCurrentMonth &&
+                      (day < currentManilaDay ||
+                        (day === currentManilaDay &&
+                          hourIndex < currentManilaHour));
+
                     return (
-                      <td key={hourIndex} className="schedule-cell">
+                      <td
+                        key={hourIndex}
+                        className={`schedule-cell ${isPast ? "past-cell" : ""}`}
+                      >
                         {match && hourIndex === parseInt(match.start.split(":")[0]) && (
                           <div
                             className="event-block"

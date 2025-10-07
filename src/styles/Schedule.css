@@ -145,3 +145,12 @@
 .event-form button:hover {
   background: #007bff;
 }
+
+.past-cell {
+  background-color: #e0e0e0 !important;
+  opacity: 0.6;
+}
+
+.past-cell:hover {
+  opacity: 0.8;
+}
