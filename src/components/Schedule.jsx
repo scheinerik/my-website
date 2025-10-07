@@ -1,17 +1,12 @@
-// Sections.jsx
 import React, { useState, useEffect } from "react";
 import "../styles/Schedule.css";
 
-export default function Sections() {
-  // --- Time helpers (Asia/Manila) ---
+export default function Schedule() {
   const getManilaTime = () => {
     const now = new Date();
-    return new Date(
-      now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
-    );
+    return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
   };
 
-  // --- State ---
   const [currentTime, setCurrentTime] = useState(getManilaTime());
   const [currentMonth, setCurrentMonth] = useState(currentTime.getMonth());
   const [currentYear, setCurrentYear] = useState(currentTime.getFullYear());
@@ -23,13 +18,11 @@ export default function Sections() {
     end: "11:00",
   });
 
-  // Update the clock every minute
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Load events
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -37,11 +30,9 @@ export default function Sections() {
       .catch((err) => console.error("Failed to load events:", err));
   }, []);
 
-  // --- Derived values ---
-  const monthName = new Date(currentYear, currentMonth).toLocaleString(
-    "en-US",
-    { month: "long" }
-  );
+  const monthName = new Date(currentYear, currentMonth).toLocaleString("en-US", {
+    month: "long",
+  });
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const hours = Array.from({ length: 24 }, (_, i) =>
     i.toString().padStart(2, "0") + ":00"
@@ -53,14 +44,14 @@ export default function Sections() {
     currentYear === currentTime.getFullYear() &&
     currentMonth === currentTime.getMonth();
 
-  // --- Actions ---
   const changeMonth = (offset) => {
     let newMonth = currentMonth + offset;
     let newYear = currentYear;
     if (newMonth < 0) {
       newMonth = 11;
       newYear--;
-    } else if (newMonth > 11) {
+    }
+    if (newMonth > 11) {
       newMonth = 0;
       newYear++;
     }
@@ -78,11 +69,9 @@ export default function Sections() {
     e.preventDefault();
     if (!selectedDay) return alert("Please select a day first.");
 
-    const [sh, sm] = formData.start.split(":").map(Number);
-    const [eh, em] = formData.end.split(":").map(Number);
-    const startMin = sh * 60 + (sm || 0);
-    const endMin = eh * 60 + (em || 0);
-    if (endMin <= startMin) return alert("End time must be after start time.");
+    const [sh] = formData.start.split(":").map(Number);
+    const [eh] = formData.end.split(":").map(Number);
+    if (eh <= sh) return alert("End time must be after start time.");
 
     const newEvent = {
       year: currentYear,
@@ -117,10 +106,8 @@ export default function Sections() {
       .catch((err) => console.error("Failed to delete event:", err));
   };
 
-  // --- Render ---
   return (
     <div className="schedule-container">
-      {/* Header (month switcher) */}
       <div className="schedule-header">
         <button onClick={() => changeMonth(-1)}>←</button>
         <h2>
@@ -130,38 +117,29 @@ export default function Sections() {
       </div>
 
       <div className="schedule-grid-wrapper">
-        {/* GRID HEADER */}
-        <div
-          className="schedule-grid-header"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "var(--label-w, 120px) repeat(24, 1fr)",
-            columnGap: 0,
-          }}
-        >
+        <div className="schedule-grid-header">
           <div className="grid-label">Day</div>
-
-          {/* One merged cell for Sleep 0:00–08:00 */}
-          <div
-            className="grid-hour sleep-merged"
-            style={{ gridColumn: "2 / span 8", textAlign: "center" }}
-          >
-            0:00–08:00 Sleep
-          </div>
-
-          {/* Hour labels from 08:00 → 23:00 */}
-          {hours.slice(8).map((hour) => (
-            <div key={hour} className="grid-hour">
-              {hour}
+          {hours.map((hour) => (
+            <div
+              key={hour}
+              className={`grid-hour ${parseInt(hour) < 8 ? "sleep-hour" : ""}`}
+            >
+              {parseInt(hour) < 8 ? "Sleep" : hour}
             </div>
           ))}
         </div>
 
-        {/* GRID ROWS */}
         {Array.from({ length: daysInMonth }, (_, i) => {
           const day = i + 1;
           const isWeekend = [0, 6].includes(
             new Date(currentYear, currentMonth, day).getDay()
+          );
+
+          const dayEvents = events.filter(
+            (ev) =>
+              ev.day === day &&
+              ev.year === currentYear &&
+              ev.month === currentMonth
           );
 
           return (
@@ -171,66 +149,50 @@ export default function Sections() {
                 selectedDay === day ? "selected-day" : ""
               }`}
               onClick={() => handleSelectDay(day)}
-              style={{
-                position: "relative",
-                display: "grid",
-                gridTemplateColumns: "var(--label-w, 120px) repeat(24, 1fr)",
-                columnGap: 0,
-              }}
             >
-              {/* Day label */}
-              <div className={`grid-label ${isWeekend ? "weekend-day" : ""}`}>
+              <div
+                className={`grid-label ${isWeekend ? "weekend-day" : ""}`}
+              >
                 {monthName.slice(0, 3)} {day}
               </div>
 
-              {/* 24 hour cells */}
               {hours.map((_, index) => {
                 const isPast =
                   isCurrentMonth &&
                   (day < currentManilaDay ||
                     (day === currentManilaDay && index < currentManilaHour));
-
                 const cellClasses = [
                   "grid-hour",
                   index < 8 ? "sleep-cell" : "",
                   isPast ? "past-cell" : "",
                   isWeekend ? "weekend-cell" : "",
-                ]
-                  .filter(Boolean)
-                  .join(" ");
-
-                return <div key={index} className={cellClasses} />;
+                ].join(" ");
+                return <div key={index} className={cellClasses}></div>;
               })}
 
-              {events
-                .filter(
-                  (ev) =>
-                    ev.day === day &&
-                    ev.year === currentYear &&
-                    ev.month === currentMonth
-                )
-                .map((ev) => {
-                  const startHour = parseInt(ev.start.split(":")[0]);
-                  const endHour = parseInt(ev.end.split(":")[0]);
-                  return (
-                    <div
-                      key={ev.id}
-                      className="event-block"
-                      style={{
-                        gridColumn: `${startHour + 2} / ${endHour + 2}`,
-                      }}
-                      onDoubleClick={() => handleDeleteEvent(ev.id)}
-                    >
-                      {ev.title}
-                    </div>
-                  );
-                })}
+              {/* Events INSIDE the grid now */}
+              {dayEvents.map((ev) => {
+                const startHour = parseInt(ev.start.split(":")[0]);
+                const endHour = parseInt(ev.end.split(":")[0]);
+                return (
+                  <div
+                    key={ev.id}
+                    className="event-block"
+                    style={{
+                      gridColumn: `${startHour + 2} / ${endHour + 2}`,
+                      zIndex: 3,
+                    }}
+                    onDoubleClick={() => handleDeleteEvent(ev.id)}
+                  >
+                    {ev.title}
+                  </div>
+                );
+              })}
             </div>
           );
         })}
       </div>
 
-      {/* Add Event form */}
       {selectedDay && (
         <div className="event-form-section">
           <h3>
@@ -246,7 +208,6 @@ export default function Sections() {
               }
               required
             />
-
             <div className="time-inputs">
               <label>Start:</label>
               <input
@@ -267,7 +228,6 @@ export default function Sections() {
                 required
               />
             </div>
-
             <button type="submit">Add Event</button>
           </form>
         </div>

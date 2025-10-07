@@ -1,80 +1,59 @@
-/* =========================
-   Schedule.css
-   ========================= */
-
-:root {
-  --label-w: 120px;          /* must match the left offset in JS */
-  --grid-border: #e5e7eb;    /* light gray */
-  --grid-bg: #fff;           /* cell background */
-  --sleep-bg: #f3f4f6;       /* sleep band bg */
-  --past-bg: #fafafa;        /* past cell bg */
-  --weekend-bg: #f8fafc;     /* weekend bg */
-  --event-bg: #3b82f6;       /* event blue */
-  --event-text: #fff;
-  --event-border: #1d4ed8;   /* darker blue */
-  --label-color: #334155;    /* slate-700 */
-  --muted: #6b7280;          /* gray-500 */
-  --radius: 8px;
-}
-
-/* Container */
 .schedule-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-  color: #0f172a; /* slate-900 */
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: "Inter", sans-serif;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  padding-bottom: 2rem;
 }
 
-/* Header (month switcher) */
 .schedule-header {
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
-.schedule-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-}
+
 .schedule-header button {
-  appearance: none;
-  border: 1px solid var(--grid-border);
-  background: #fff;
-  padding: 6px 10px;
+  background: #58a6ff;
+  color: #fff;
+  border: none;
   border-radius: 6px;
+  padding: 0.5rem 1rem;
   cursor: pointer;
+  font-weight: 600;
 }
+
 .schedule-header button:hover {
-  background: #f9fafb;
+  background: #007bff;
 }
 
-/* Wrapper enables horizontal scroll if needed */
 .schedule-grid-wrapper {
-  width: 100%;
+  display: flex;
+  flex-direction: column;
   overflow-x: auto;
-  border: 1px solid var(--grid-border);
-  border-radius: var(--radius);
-  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Grid header row (Day + hour labels) */
 .schedule-grid-header {
-  position: sticky; /* stays visible when scrolling */
-  top: 0;
-  z-index: 5;
   display: grid;
-  grid-template-columns: var(--label-w) repeat(24, 1fr);
-  column-gap: 0;
-  background: #f8fafc;
-  border-bottom: 1px solid var(--grid-border);
+  grid-template-columns: 120px repeat(24, 1fr);
+  min-height: 35px;
+  position: relative;
 }
-
-/* Left column label cell */
+.schedule-grid-row {
+  display: grid;
+  grid-template-columns: 120px repeat(24, 1fr);
+  align-items: center;
+  position: relative;
+}
 .grid-label {
   background: #161b22;
+  height:100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   padding-right: 8px;
   text-align: right;
   font-weight: 500;
@@ -82,186 +61,98 @@
   border-right: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Header hour cells */
-.schedule-grid-header .grid-hour {
-  padding: 8px 6px;
-  font-size: 0.85rem;
+.grid-hour {
+  border: 1px solid rgba(255, 255, 255, 0.05);
   text-align: center;
-  color: var(--muted);
-  border-right: 1px solid var(--grid-border);
-  white-space: nowrap;
-}
-.schedule-grid-header .grid-hour:last-child {
-  border-right: none;
+  min-height: 35px;
+  background: rgba(255, 255, 255, 0.02);
 }
 
-/* The merged sleep header cell (0:00–08:00) */
-.sleep-merged {
-  background: var(--sleep-bg);
-  font-weight: 700;
-  border-right: 1px solid var(--grid-border);
-  border-left: 1px solid var(--grid-border);
-}
-
-/* Each day row */
-.schedule-grid-row {
-  position: relative; /* so .event-block absolute coords anchor here */
-  display: grid;
-  grid-template-columns: var(--label-w) repeat(24, 1fr);
-  column-gap: 0;      /* IMPORTANT: math depends on 0 gap */
-  min-height: 44px;   /* comfortable click target */
-  border-bottom: 1px solid var(--grid-border);
-  background: var(--grid-bg);
-}
-.schedule-grid-row:last-child {
-  border-bottom: none;
-}
-
-/* Hour cells within day rows */
-.schedule-grid-row .grid-hour {
-  border-right: 1px solid var(--grid-border);
-  min-height: 44px;
-}
-.schedule-grid-row .grid-hour:last-child {
-  border-right: none;
-}
-
-/* Sleep cells (0–7) */
+.sleep-hour,
 .sleep-cell {
-  background: var(--sleep-bg);
+  background: rgba(0, 0, 80, 0.3);
+  color: #9da9c2;
+  font-style: italic;
+  text-align: center;
 }
 
-/* Past cells shading (today’s past hours) */
-.past-cell {
-  background: var(--past-bg);
-}
-
-/* Weekend shading (Sat/Sun) */
-.weekend-day {
-  color: #dc2626; /* red-600 for the day label */
-}
 .weekend-cell {
-  background: var(--weekend-bg);
+  background-color: rgba(0, 128, 0, 0.2);
 }
 
-/* Selected day highlight */
+.weekend-day {
+  background-color: rgba(0, 128, 0, 0.25);
+  font-weight: 600;
+  color: #b4f2b4;
+}
+
+.past-cell {
+  background-color: rgba(150, 150, 150, 0.15);
+  opacity: 0.5;
+}
+
 .selected-day {
-  box-shadow: inset 0 0 0 2px #93c5fd; /* blue-300 outline */
+  outline: 1px solid #58a6ff;
 }
 
-/* Event blocks overlay */
+/* Event block */
 .event-block {
-  position: absolute;
-  top: 4px;
-  height: calc(100% - 8px);
-  background: var(--event-bg);
-  color: var(--event-text);
-  border: 1px solid var(--event-border);
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 0.85rem;
+  background: rgba(88, 166, 255, 0.35);
+  border-left: 3px solid #58a6ff;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #e6edf3;
   display: flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   height: 100%;
   padding: 0 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
 }
-
 /* Form */
 .event-form-section {
-  margin-top: 16px;
-  padding: 12px;
-  border: 1px solid var(--grid-border);
-  border-radius: var(--radius);
-  background: #fff;
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
 }
-.event-form-section h3 {
-  margin: 0 0 10px 0;
-  font-size: 1.05rem;
-  font-weight: 700;
-}
+
 .event-form {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 10px;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
-.event-form input[type="text"] {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--grid-border);
+
+.event-form input,
+.event-form button {
+  padding: 0.5rem;
   border-radius: 6px;
+  border: none;
+  outline: none;
 }
-.event-form .time-inputs {
-  display: contents; /* keep the inline layout with grid above */
+
+.event-form input {
+  background: #161b22;
+  color: #e6edf3;
 }
-.event-form label {
-  font-size: 0.9rem;
-  color: var(--muted);
-  justify-self: end;
-}
-.event-form input[type="time"] {
-  padding: 6px 8px;
-  border: 1px solid var(--grid-border);
-  border-radius: 6px;
-}
-.event-form button[type="submit"] {
-  appearance: none;
-  border: 1px solid var(--grid-border);
-  background: #111827;
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 8px;
+
+.event-form button {
+  background: #58a6ff;
+  color: white;
   cursor: pointer;
   font-weight: 600;
 }
-.event-form button[type="submit"]:hover {
-  background: #0b1220;
+
+.event-form button:hover {
+  background: #007bff;
 }
 
-/* Subtle zebra for readability (optional) */
-.schedule-grid-row:nth-child(odd) {
-  /* uncomment if you want a faint zebra
-  background: #fcfcfd;
-  */
-}
-
-/* Better horizontal scrolling on small screens */
-.schedule-grid-wrapper::-webkit-scrollbar {
-  height: 10px;
-}
-.schedule-grid-wrapper::-webkit-scrollbar-track {
-  background: #f1f5f9; /* slate-100 */
-  border-radius: 6px;
-}
-.schedule-grid-wrapper::-webkit-scrollbar-thumb {
-  background: #cbd5e1; /* slate-300 */
-  border-radius: 6px;
-}
-
-/* Responsive tweaks */
-@media (max-width: 900px) {
-  :root { --label-w: 96px; }
-  .schedule-header h2 { font-size: 1.1rem; }
-  .schedule-grid-header .grid-hour { font-size: 0.8rem; }
-  .event-form {
-    grid-template-columns: 1fr 1fr 1fr auto;
-  }
-}
-
-@media (max-width: 600px) {
-  :root { --label-w: 86px; }
-  .schedule-container { padding: 12px; }
-  .schedule-header { gap: 8px; }
-  .schedule-header h2 { font-size: 1rem; }
-  .event-form {
-    grid-template-columns: 1fr;
-  }
-  .event-form label {
-    justify-self: start;
-  }
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
