@@ -164,16 +164,12 @@ export default function Schedule() {
                   </td>
 
                   {/* Sleep Column */}
-                  <td
-                    className="sleep-cell"
-                    colSpan={8}
-                  >
-                    😴 Sleep
+                  <td className="sleep-cell" colSpan={8}>
                   </td>
 
                   {/* Daytime hours */}
                   {hours.slice(8).map((_, hourIndex) => {
-                    const actualHour = hourIndex + 8; // since we sliced
+                    const actualHour = hourIndex + 8; // adjust index
                     const match = events.find(
                       (ev) =>
                         ev.day === day &&
@@ -189,6 +185,12 @@ export default function Schedule() {
                         (day === currentManilaDay &&
                           actualHour < currentManilaHour));
 
+                    const startHour = match
+                      ? parseInt(match.start.split(":")[0])
+                      : 0;
+                    const endHour = match ? parseInt(match.end.split(":")[0]) : 0;
+                    const span = endHour - startHour;
+
                     return (
                       <td
                         key={actualHour}
@@ -196,28 +198,20 @@ export default function Schedule() {
                           ${isPast ? "past-cell" : ""} 
                           ${isWeekend ? "weekend-cell" : ""}`}
                       >
-                        {match &&
-                          actualHour === parseInt(match.start.split(":")[0]) && (
-                            <div
-                              className="event-block"
-                              style={{
-                                gridColumn: `span ${
-                                  parseInt(match.end.split(":")[0]) -
-                                  parseInt(match.start.split(":")[0])
-                                }`,
-                                width: `${
-                                  (parseInt(match.end.split(":")[0]) -
-                                    parseInt(match.start.split(":")[0])) *
-                                  70
-                                }px`,
-                              }}
-                              onDoubleClick={() =>
-                                handleDeleteEvent(match.id)
-                              }
-                            >
-                              {match.title}
-                            </div>
-                          )}
+                        {match && actualHour === startHour && (
+                          <div
+                            className="event-block"
+                            style={{
+                              gridColumn: `span ${span}`,
+                              width: `${span * 70}px`,
+                            }}
+                            onDoubleClick={() =>
+                              handleDeleteEvent(match.id)
+                            }
+                          >
+                            {match.title}
+                          </div>
+                        )}
                       </td>
                     );
                   })}

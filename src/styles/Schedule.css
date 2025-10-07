@@ -22,6 +22,7 @@
   border-radius: 6px;
   padding: 0.5rem 1rem;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .schedule-header button:hover {
@@ -84,11 +85,11 @@
   background: rgba(88, 166, 255, 0.15);
 }
 
+/* 🗓️ Event blocks */
 .event-block {
   position: absolute;
-  top: 0;
-  left: 0;
-  background: rgba(88, 166, 255, 0.25);
+  inset: 0;
+  background: rgba(88, 166, 255, 0.3);
   border-left: 3px solid #58a6ff;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -102,6 +103,7 @@
   justify-content: center;
 }
 
+/* 🧾 Event form section */
 .event-form-section {
   margin-top: 2rem;
   padding: 1rem;
@@ -146,15 +148,17 @@
   background: #007bff;
 }
 
+/* 🕓 Past cells */
 .past-cell {
-  background-color: #e0e0e0 !important;
+  background-color: rgba(150, 150, 150, 0.15) !important;
   opacity: 0.5;
 }
 
 .past-cell:hover {
-  opacity: 0.6;
+  opacity: 0.65;
 }
 
+/* 💚 Weekend highlights */
 .weekend-cell {
   background-color: rgba(0, 128, 0, 0.2) !important;
 }
@@ -162,12 +166,15 @@
 .weekend-day {
   background-color: rgba(0, 128, 0, 0.25) !important;
   font-weight: 600;
+  color: #b4f2b4;
 }
 
+/* 😴 Sleep column */
 .sleep-col,
 .sleep-cell {
-  background-color: #f3f3f3 !important;
-  color: #666;
+  background-color: rgba(0, 0, 80, 0.3) !important;
+  color: #9da9c2;
   font-style: italic;
   text-align: center;
+  min-width: 120px;
 }
