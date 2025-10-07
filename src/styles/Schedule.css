@@ -66,6 +66,8 @@
   text-align: center;
   min-height: 35px;
   background: rgba(255, 255, 255, 0.02);
+  position: relative;
+  z-index: 1;
 }
 
 .sleep-hour,
@@ -97,7 +99,10 @@
 
 /* Event block */
 .event-block {
-  background: rgba(88, 166, 255, 0.35);
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(88, 166, 255, 0.4);
   border-left: 3px solid #58a6ff;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -105,12 +110,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  padding: 0 5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  cursor: pointer;
   z-index: 3;
 }
 /* Form */

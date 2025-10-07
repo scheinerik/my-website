@@ -174,13 +174,15 @@ export default function Schedule() {
               {dayEvents.map((ev) => {
                 const startHour = parseInt(ev.start.split(":")[0]);
                 const endHour = parseInt(ev.end.split(":")[0]);
+                const left = (startHour / 24) * 100;
+                const width = ((endHour - startHour) / 24) * 100;
                 return (
                   <div
                     key={ev.id}
                     className="event-block"
                     style={{
-                      gridColumn: `${startHour + 2} / ${endHour + 2}`,
-                      zIndex: 3,
+                      left: `calc(${left}% + 120px)`,
+                      width: `calc(${width}% - 2px)`,
                     }}
                     onDoubleClick={() => handleDeleteEvent(ev.id)}
                   >
