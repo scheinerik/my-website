@@ -1,12 +1,17 @@
+// Sections.jsx
 import React, { useState, useEffect } from "react";
 import "../styles/Schedule.css";
 
-export default function Schedule() {
+export default function Sections() {
+  // --- Time helpers (Asia/Manila) ---
   const getManilaTime = () => {
     const now = new Date();
-    return new Date(now.toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+    return new Date(
+      now.toLocaleString("en-US", { timeZone: "Asia/Manila" })
+    );
   };
 
+  // --- State ---
   const [currentTime, setCurrentTime] = useState(getManilaTime());
   const [currentMonth, setCurrentMonth] = useState(currentTime.getMonth());
   const [currentYear, setCurrentYear] = useState(currentTime.getFullYear());
@@ -18,11 +23,13 @@ export default function Schedule() {
     end: "11:00",
   });
 
+  // Update the clock every minute
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
     return () => clearInterval(interval);
   }, []);
 
+  // Load events
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -30,9 +37,11 @@ export default function Schedule() {
       .catch((err) => console.error("Failed to load events:", err));
   }, []);
 
-  const monthName = new Date(currentYear, currentMonth).toLocaleString("en-US", {
-    month: "long",
-  });
+  // --- Derived values ---
+  const monthName = new Date(currentYear, currentMonth).toLocaleString(
+    "en-US",
+    { month: "long" }
+  );
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const hours = Array.from({ length: 24 }, (_, i) =>
     i.toString().padStart(2, "0") + ":00"
@@ -44,14 +53,14 @@ export default function Schedule() {
     currentYear === currentTime.getFullYear() &&
     currentMonth === currentTime.getMonth();
 
+  // --- Actions ---
   const changeMonth = (offset) => {
     let newMonth = currentMonth + offset;
     let newYear = currentYear;
     if (newMonth < 0) {
       newMonth = 11;
       newYear--;
-    }
-    if (newMonth > 11) {
+    } else if (newMonth > 11) {
       newMonth = 0;
       newYear++;
     }
@@ -69,9 +78,11 @@ export default function Schedule() {
     e.preventDefault();
     if (!selectedDay) return alert("Please select a day first.");
 
-    const [sh] = formData.start.split(":").map(Number);
-    const [eh] = formData.end.split(":").map(Number);
-    if (eh <= sh) return alert("End time must be after start time.");
+    const [sh, sm] = formData.start.split(":").map(Number);
+    const [eh, em] = formData.end.split(":").map(Number);
+    const startMin = sh * 60 + (sm || 0);
+    const endMin = eh * 60 + (em || 0);
+    if (endMin <= startMin) return alert("End time must be after start time.");
 
     const newEvent = {
       year: currentYear,
@@ -106,8 +117,10 @@ export default function Schedule() {
       .catch((err) => console.error("Failed to delete event:", err));
   };
 
+  // --- Render ---
   return (
     <div className="schedule-container">
+      {/* Header (month switcher) */}
       <div className="schedule-header">
         <button onClick={() => changeMonth(-1)}>←</button>
         <h2>
@@ -117,18 +130,34 @@ export default function Schedule() {
       </div>
 
       <div className="schedule-grid-wrapper">
-        <div className="schedule-grid-header">
+        {/* GRID HEADER */}
+        <div
+          className="schedule-grid-header"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "var(--label-w, 120px) repeat(24, 1fr)",
+            columnGap: 0,
+          }}
+        >
           <div className="grid-label">Day</div>
-          {hours.map((hour) => (
-            <div
-              key={hour}
-              className={`grid-hour ${parseInt(hour) < 8 ? "sleep-hour" : ""}`}
-            >
-              {parseInt(hour) < 8 ? "Sleep" : hour}
+
+          {/* One merged cell for Sleep 0:00–08:00 */}
+          <div
+            className="grid-hour sleep-merged"
+            style={{ gridColumn: "2 / span 8", textAlign: "center" }}
+          >
+            0:00–08:00 Sleep
+          </div>
+
+          {/* Hour labels from 08:00 → 23:00 */}
+          {hours.slice(8).map((hour) => (
+            <div key={hour} className="grid-hour">
+              {hour}
             </div>
           ))}
         </div>
 
+        {/* GRID ROWS */}
         {Array.from({ length: daysInMonth }, (_, i) => {
           const day = i + 1;
           const isWeekend = [0, 6].includes(
@@ -149,44 +178,70 @@ export default function Schedule() {
                 selectedDay === day ? "selected-day" : ""
               }`}
               onClick={() => handleSelectDay(day)}
+              style={{
+                position: "relative",
+                display: "grid",
+                gridTemplateColumns: "var(--label-w, 120px) repeat(24, 1fr)",
+                columnGap: 0,
+              }}
             >
-              <div
-                className={`grid-label ${isWeekend ? "weekend-day" : ""}`}
-              >
+              {/* Day label */}
+              <div className={`grid-label ${isWeekend ? "weekend-day" : ""}`}>
                 {monthName.slice(0, 3)} {day}
               </div>
 
+              {/* 24 hour cells */}
               {hours.map((_, index) => {
                 const isPast =
                   isCurrentMonth &&
                   (day < currentManilaDay ||
                     (day === currentManilaDay && index < currentManilaHour));
+
                 const cellClasses = [
                   "grid-hour",
                   index < 8 ? "sleep-cell" : "",
                   isPast ? "past-cell" : "",
                   isWeekend ? "weekend-cell" : "",
-                ].join(" ");
-                return <div key={index} className={cellClasses}></div>;
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+
+                return <div key={index} className={cellClasses} />;
               })}
 
-              {/* Events INSIDE the grid now */}
+              {/* Event blocks (positioned with minute-precision across 24h) */}
               {dayEvents.map((ev) => {
-                const startHour = parseInt(ev.start.split(":")[0]);
-                const endHour = parseInt(ev.end.split(":")[0]);
-                const left = (startHour / 23) * 100;
-                const width = ((endHour - startHour) / 23) * 100;
+                const [sh, sm] = ev.start.split(":").map(Number);
+                const [eh, em] = ev.end.split(":").map(Number);
+
+                const startMin = sh * 60 + (sm || 0);
+                const endMin = eh * 60 + (em || 0);
+                const totalMin = 24 * 60;
+
+                if (endMin <= startMin) return null;
+
+                const leftPct = (startMin / totalMin) * 100;
+                const widthPct = ((endMin - startMin) / totalMin) * 100;
+
                 return (
                   <div
                     key={ev.id}
                     className="event-block"
                     style={{
-                      left: `calc(${left}% + 120px)`,
-                      width: `calc(${width}% - 2px)`,
+                      position: "absolute",
+                      top: 4,
+                      height: "calc(100% - 8px)",
+                      zIndex: 2,
+                      left: `calc(${leftPct}% + var(--label-w, 120px))`,
+                      width: `calc(${widthPct}% - 2px)`,
                     }}
-                    onDoubleClick={() => handleDeleteEvent(ev.id)}
+                    title={`${ev.title} (${ev.start}–${ev.end})`}
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteEvent(ev.id);
+                    }}
                   >
-                    {ev.title}
+                    {ev.title || `${ev.start}–${ev.end}`}
                   </div>
                 );
               })}
@@ -195,6 +250,7 @@ export default function Schedule() {
         })}
       </div>
 
+      {/* Add Event form */}
       {selectedDay && (
         <div className="event-form-section">
           <h3>
