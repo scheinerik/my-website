@@ -50,6 +50,10 @@
 }
 .grid-label {
   background: #161b22;
+  height:100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   padding-right: 8px;
   text-align: right;
   font-weight: 500;
@@ -101,14 +105,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   height: 100%;
   padding: 0 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
 }
-
 /* Form */
 .event-form-section {
   margin-top: 2rem;

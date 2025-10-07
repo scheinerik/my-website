@@ -135,6 +135,13 @@ export default function Schedule() {
             new Date(currentYear, currentMonth, day).getDay()
           );
 
+          const dayEvents = events.filter(
+            (ev) =>
+              ev.day === day &&
+              ev.year === currentYear &&
+              ev.month === currentMonth
+          );
+
           return (
             <div
               key={day}
@@ -163,29 +170,24 @@ export default function Schedule() {
                 return <div key={index} className={cellClasses}></div>;
               })}
 
-              {events
-                .filter(
-                  (ev) =>
-                    ev.day === day &&
-                    ev.year === currentYear &&
-                    ev.month === currentMonth
-                )
-                .map((ev) => {
-                  const startHour = parseInt(ev.start.split(":")[0]);
-                  const endHour = parseInt(ev.end.split(":")[0]);
-                  return (
-                    <div
-                      key={ev.id}
-                      className="event-block"
-                      style={{
-                        gridColumn: `${startHour + 2} / ${endHour + 2}`,
-                      }}
-                      onDoubleClick={() => handleDeleteEvent(ev.id)}
-                    >
-                      {ev.title}
-                    </div>
-                  );
-                })}
+              {/* Events INSIDE the grid now */}
+              {dayEvents.map((ev) => {
+                const startHour = parseInt(ev.start.split(":")[0]);
+                const endHour = parseInt(ev.end.split(":")[0]);
+                return (
+                  <div
+                    key={ev.id}
+                    className="event-block"
+                    style={{
+                      gridColumn: `${startHour + 2} / ${endHour + 2}`,
+                      zIndex: 3,
+                    }}
+                    onDoubleClick={() => handleDeleteEvent(ev.id)}
+                  >
+                    {ev.title}
+                  </div>
+                );
+              })}
             </div>
           );
         })}
@@ -206,7 +208,6 @@ export default function Schedule() {
               }
               required
             />
-
             <div className="time-inputs">
               <label>Start:</label>
               <input
@@ -227,7 +228,6 @@ export default function Schedule() {
                 required
               />
             </div>
-
             <button type="submit">Add Event</button>
           </form>
         </div>
