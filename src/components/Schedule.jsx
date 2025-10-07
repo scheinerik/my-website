@@ -214,26 +214,26 @@ export default function Sections() {
                 const [sh, sm] = ev.start.split(":").map(Number);
                 const [eh, em] = ev.end.split(":").map(Number);
 
+                // Calculate start and end in minutes
                 const startMin = sh * 60 + (sm || 0);
                 const endMin = eh * 60 + (em || 0);
-                const totalMin = 24 * 60;
-
                 if (endMin <= startMin) return null;
 
-                const leftPct = (startMin / totalMin) * 100;
-                const widthPct = ((endMin - startMin) / totalMin) * 100;
+                // Convert to grid columns (1-based, first column is label)
+                // Each hour is a column, so minute precision is mapped to fractional columns
+                const startCol = 2 + startMin / 60; // 2 = skip label column
+                const endCol = 2 + endMin / 60;
 
                 return (
                   <div
                     key={ev.id}
                     className="event-block"
                     style={{
-                      position: "absolute",
+                      gridColumn: `${startCol} / ${endCol}`,
+                      zIndex: 2,
                       top: 4,
                       height: "calc(100% - 8px)",
-                      zIndex: 2,
-                      left: `calc(${leftPct}% + var(--label-w, 120px))`,
-                      width: `calc(${widthPct}% - 2px)`,
+                      position: "absolute",
                     }}
                     title={`${ev.title} (${ev.start}–${ev.end})`}
                     onDoubleClick={(e) => {
