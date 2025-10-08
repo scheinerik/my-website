@@ -17,9 +17,10 @@ export default function Schedule() {
     start: "10:00",
     end: "11:00",
     repeat: "none",
+    repeatCount: 1, // how many days/weeks/months to repeat
   });
 
-  // Update Manila time every minute
+  // Update current time every minute
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
     return () => clearInterval(interval);
@@ -70,6 +71,7 @@ export default function Schedule() {
       start: "10:00",
       end: "11:00",
       repeat: "none",
+      repeatCount: 1,
     });
   };
 
@@ -99,7 +101,11 @@ export default function Schedule() {
 
     // Generate repeating events
     if (formData.repeat !== "none") {
-      const repeatCount = 30; // Generate 30 future instances
+      const repeatCount = Math.min(
+        Math.max(parseInt(formData.repeatCount) || 1, 1),
+        365
+      ); // limit to max 1 year worth
+
       for (let i = 1; i <= repeatCount; i++) {
         const date = new Date(currentYear, currentMonth, selectedDay);
 
@@ -144,7 +150,7 @@ export default function Schedule() {
     setSelectedDay(null);
   };
 
-  // Delete event (with repeat group option)
+  // Delete event (single or all repeats)
   const handleDeleteEvent = (id) => {
     const targetEvent = events.find((e) => e.id === id);
     if (!targetEvent) return;
@@ -155,7 +161,6 @@ export default function Schedule() {
       );
 
       if (choice) {
-        // Delete all in this repeat group
         fetch(`/api/events?repeatId=${targetEvent.repeatId}`, { method: "DELETE" })
           .then((res) => res.json())
           .then(() =>
@@ -166,7 +171,6 @@ export default function Schedule() {
       }
     }
 
-    // Delete only this event
     fetch(`/api/events?id=${id}`, { method: "DELETE" })
       .then((res) => res.json())
       .then(() => setEvents((prev) => prev.filter((e) => e.id !== id)))
@@ -238,7 +242,7 @@ export default function Schedule() {
                 {monthName.slice(0, 3)} {day}
               </div>
 
-              {/* Build cells with event spacing */}
+              {/* Build cells */}
               {(() => {
                 const cells = [];
                 let currentHour = 0;
@@ -270,7 +274,7 @@ export default function Schedule() {
                     );
                   }
 
-                  // Add event cell (spanning multiple columns)
+                  // Event block
                   cells.push(
                     <div
                       key={`event-${day}-${ev.id}`}
@@ -287,11 +291,10 @@ export default function Schedule() {
                     </div>
                   );
 
-                  // Skip event duration
                   currentHour = end;
                 }
 
-                // Fill remaining hours
+                // Fill remaining cells
                 for (; currentHour < 24; currentHour++) {
                   const isPast =
                     isCurrentMonth &&
@@ -337,6 +340,7 @@ export default function Schedule() {
               }
               required
             />
+
             <div className="time-inputs">
               <label>Start:</label>
               <input
@@ -356,6 +360,7 @@ export default function Schedule() {
                 }
                 required
               />
+
               <label>Repeat:</label>
               <select
                 value={formData.repeat}
@@ -368,7 +373,31 @@ export default function Schedule() {
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
               </select>
+
+              {formData.repeat !== "none" && (
+                <>
+                  <label>Repeat For:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={formData.repeatCount}
+                    onChange={(e) =>
+                      setFormData({ ...formData, repeatCount: e.target.value })
+                    }
+                    style={{ width: "80px" }}
+                  />
+                  <span style={{ marginLeft: "4px" }}>
+                    {formData.repeat === "daily"
+                      ? "days"
+                      : formData.repeat === "weekly"
+                      ? "weeks"
+                      : "months"}
+                  </span>
+                </>
+              )}
             </div>
+
             <button type="submit">Add Event</button>
           </form>
         </div>
