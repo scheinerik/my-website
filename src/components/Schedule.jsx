@@ -18,11 +18,13 @@ export default function Schedule() {
     end: "11:00",
   });
 
+  // Update current Manila time every minute
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
     return () => clearInterval(interval);
   }, []);
 
+  // Load events
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -108,6 +110,7 @@ export default function Schedule() {
 
   return (
     <div className="schedule-container">
+      {/* Month Navigation */}
       <div className="schedule-header">
         <button onClick={() => changeMonth(-1)}>←</button>
         <h2>
@@ -116,6 +119,7 @@ export default function Schedule() {
         <button onClick={() => changeMonth(1)}>→</button>
       </div>
 
+      {/* Grid Header */}
       <div className="schedule-grid-wrapper">
         <div className="schedule-grid-header">
           <div className="grid-label">Day</div>
@@ -129,18 +133,25 @@ export default function Schedule() {
           ))}
         </div>
 
+        {/* Daily Rows */}
         {Array.from({ length: daysInMonth }, (_, i) => {
           const day = i + 1;
           const isWeekend = [0, 6].includes(
             new Date(currentYear, currentMonth, day).getDay()
           );
 
-          const dayEvents = events.filter(
-            (ev) =>
-              ev.day === day &&
-              ev.year === currentYear &&
-              ev.month === currentMonth
-          );
+          const dayEvents = events
+            .filter(
+              (ev) =>
+                ev.day === day &&
+                ev.year === currentYear &&
+                ev.month === currentMonth
+            )
+            .sort(
+              (a, b) =>
+                parseInt(a.start.split(":")[0]) -
+                parseInt(b.start.split(":")[0])
+            );
 
           return (
             <div
@@ -156,56 +167,87 @@ export default function Schedule() {
                 {monthName.slice(0, 3)} {day}
               </div>
 
-              {hours.map((_, index) => {
-                const hasEventCovering = dayEvents.some((ev) => {
+              {/* Build cells with event spacing */}
+              {(() => {
+                const cells = [];
+                let currentHour = 0;
+
+                for (const ev of dayEvents) {
                   const start = parseInt(ev.start.split(":")[0]);
                   const end = parseInt(ev.end.split(":")[0]);
-                  return index >= start && index < end;
-                });
-              
-                if (hasEventCovering) {
-                  // Skip rendering this cell — event covers it
-                  return null;
-                }
-              
-                const isPast =
-                  isCurrentMonth &&
-                  (day < currentManilaDay ||
-                    (day === currentManilaDay && index < currentManilaHour));
-                  
-                const cellClasses = [
-                  "grid-hour",
-                  index < 8 ? "sleep-cell" : "",
-                  isPast ? "past-cell" : "",
-                  isWeekend ? "weekend-cell" : "",
-                ].join(" ");
-              
-                return <div key={index} className={cellClasses}></div>;
-              })}
 
-              {/* Events INSIDE the grid now */}
-              {dayEvents.map((ev) => {
-                const startHour = parseInt(ev.start.split(":")[0]);
-                const endHour = parseInt(ev.end.split(":")[0]);
-                return (
-                  <div
-                    key={ev.id}
-                    className="event-block"
-                    style={{
-                      gridColumn: `${startHour + 2} / ${endHour + 2}`,
-                      zIndex: 3,
-                    }}
-                    onDoubleClick={() => handleDeleteEvent(ev.id)}
-                  >
-                    {ev.title}
-                  </div>
-                );
-              })}
+                  // Fill blank cells before event
+                  for (; currentHour < start; currentHour++) {
+                    const isPast =
+                      isCurrentMonth &&
+                      (day < currentManilaDay ||
+                        (day === currentManilaDay &&
+                          currentHour < currentManilaHour));
+
+                    const cellClasses = [
+                      "grid-hour",
+                      currentHour < 8 ? "sleep-cell" : "",
+                      isPast ? "past-cell" : "",
+                      isWeekend ? "weekend-cell" : "",
+                    ].join(" ");
+
+                    cells.push(
+                      <div
+                        key={`cell-${day}-${currentHour}`}
+                        className={cellClasses}
+                      ></div>
+                    );
+                  }
+
+                  // Add event cell (spanning multiple columns)
+                  cells.push(
+                    <div
+                      key={`event-${day}-${ev.id}`}
+                      className="event-block"
+                      style={{
+                        gridColumn: `span ${end - start}`,
+                      }}
+                      onDoubleClick={() => handleDeleteEvent(ev.id)}
+                    >
+                      {ev.title}
+                    </div>
+                  );
+
+                  // Skip event duration
+                  currentHour = end;
+                }
+
+                // Fill remaining hours after last event
+                for (; currentHour < 24; currentHour++) {
+                  const isPast =
+                    isCurrentMonth &&
+                    (day < currentManilaDay ||
+                      (day === currentManilaDay &&
+                        currentHour < currentManilaHour));
+
+                  const cellClasses = [
+                    "grid-hour",
+                    currentHour < 8 ? "sleep-cell" : "",
+                    isPast ? "past-cell" : "",
+                    isWeekend ? "weekend-cell" : "",
+                  ].join(" ");
+
+                  cells.push(
+                    <div
+                      key={`cell-${day}-${currentHour}`}
+                      className={cellClasses}
+                    ></div>
+                  );
+                }
+
+                return cells;
+              })()}
             </div>
           );
         })}
       </div>
 
+      {/* Add Event Form */}
       {selectedDay && (
         <div className="event-form-section">
           <h3>
