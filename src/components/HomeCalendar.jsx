@@ -12,6 +12,13 @@ export default function HomeCalendar() {
   const [currentYear, setCurrentYear] = useState(currentTime.getFullYear());
   const [events, setEvents] = useState([]);
 
+  // Refresh every minute to stay in sync with Manila time
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Load events
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -22,7 +29,6 @@ export default function HomeCalendar() {
   const monthName = new Date(currentYear, currentMonth).toLocaleString("en-US", {
     month: "long",
   });
-
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
   const changeMonth = (offset) => {
@@ -61,7 +67,7 @@ export default function HomeCalendar() {
               ev.month === currentMonth
           );
 
-          // calculate total used hours
+          // Calculate total used hours
           const totalHoursUsed = dayEvents.reduce((sum, ev) => {
             const start = parseInt(ev.start.split(":")[0]);
             const end = parseInt(ev.end.split(":")[0]);
@@ -71,10 +77,26 @@ export default function HomeCalendar() {
           const freeHours = Math.max(8 - totalHoursUsed, 0);
           const isFullDay = totalHoursUsed >= 8;
 
+          // Determine if the day is in the past
+          const today = currentTime.getDate();
+          const isPast =
+            currentYear === currentTime.getFullYear() &&
+            currentMonth === currentTime.getMonth() &&
+            day < today;
+
+          // Determine if it’s today
+          const isToday =
+            currentYear === currentTime.getFullYear() &&
+            currentMonth === currentTime.getMonth() &&
+            day === today;
+
           return (
             <div
               key={day}
-              className={`calendar-day ${isFullDay ? "full" : ""}`}
+              className={`calendar-day 
+                ${isFullDay ? "full" : ""} 
+                ${isPast ? "past" : ""} 
+                ${isToday ? "today" : ""}`}
               title={
                 isFullDay
                   ? `Full (8h used)`

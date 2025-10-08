@@ -28,6 +28,7 @@
   padding: 10px 0;
   transition: 0.2s ease;
   cursor: pointer;
+  position: relative;
 }
 
 .calendar-day:hover {
@@ -57,4 +58,23 @@
 .calendar-day.full {
   background: #ffe5e5;
   border: 1px solid #e57373;
+}
+
+.calendar-day.past {
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  cursor: default;
+}
+
+.calendar-day.today {
+  border: 2px solid #2196f3;
+  background: #e3f2fd;
+}
+
+.calendar-day.past .status {
+  color: #ddd;
+}
+
+.calendar-day.past:hover {
+  background: rgba(0, 0, 0, 0.5); /* disable hover effect */
 }
