@@ -153,14 +153,22 @@ export default function Schedule() {
                 parseInt(b.start.split(":")[0])
             );
 
+          const totalHoursUsed = dayEvents.reduce((sum, ev) => {
+          const start = parseInt(ev.start.split(":")[0]);
+          const end = parseInt(ev.end.split(":")[0]);
+          return sum + (end - start);
+          }, 0);
+          
+          const isFullDay = totalHoursUsed >= 8;
+
           return (
-            <div
-              key={day}
-              className={`schedule-grid-row ${
-                selectedDay === day ? "selected-day" : ""
-              }`}
-              onClick={() => handleSelectDay(day)}
-            >
+              <div
+                key={day}
+                className={`schedule-grid-row ${
+                  selectedDay === day ? "selected-day" : ""
+                } ${isFullDay ? "full-day" : ""}`}
+                onClick={() => handleSelectDay(day)}
+              >
               <div
                 className={`grid-label ${isWeekend ? "weekend-day" : ""}`}
               >
