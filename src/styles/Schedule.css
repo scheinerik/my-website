@@ -158,3 +158,8 @@
   gap: 0.5rem;
 }
 
+.repeat-icon {
+  margin-left: 5px;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}

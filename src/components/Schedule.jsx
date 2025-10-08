@@ -16,6 +16,7 @@ export default function Schedule() {
     title: "",
     start: "10:00",
     end: "11:00",
+    repeat: "none",
   });
 
   // Update current Manila time every minute
@@ -24,7 +25,7 @@ export default function Schedule() {
     return () => clearInterval(interval);
   }, []);
 
-  // Load events
+  // Load events from API
   useEffect(() => {
     fetch("/api/events")
       .then((res) => res.json())
@@ -64,7 +65,7 @@ export default function Schedule() {
 
   const handleSelectDay = (day) => {
     setSelectedDay(day);
-    setFormData({ title: "", start: "10:00", end: "11:00" });
+    setFormData({ title: "", start: "10:00", end: "11:00", repeat: "none" });
   };
 
   const addEvent = (e) => {
@@ -75,29 +76,64 @@ export default function Schedule() {
     const [eh] = formData.end.split(":").map(Number);
     if (eh <= sh) return alert("End time must be after start time.");
 
-    const newEvent = {
+    const newEvents = [];
+
+    // Base event
+    const baseEvent = {
       year: currentYear,
       month: currentMonth,
       day: selectedDay,
       start: formData.start,
       end: formData.end,
       title: formData.title,
+      repeat: formData.repeat,
     };
+    newEvents.push(baseEvent);
 
-    fetch("/api/events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newEvent),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        setEvents((prev) => [
-          ...prev,
-          { ...newEvent, id: data.id || Date.now() },
-        ]);
-        setSelectedDay(null);
+    // Generate repeating events
+    if (formData.repeat !== "none") {
+      const repeatCount = 30; // how many future occurrences to generate
+      for (let i = 1; i <= repeatCount; i++) {
+        const date = new Date(currentYear, currentMonth, selectedDay);
+
+        if (formData.repeat === "daily") {
+          date.setDate(date.getDate() + i);
+        } else if (formData.repeat === "weekly") {
+          date.setDate(date.getDate() + i * 7);
+        } else if (formData.repeat === "monthly") {
+          date.setMonth(date.getMonth() + i);
+        }
+
+        newEvents.push({
+          year: date.getFullYear(),
+          month: date.getMonth(),
+          day: date.getDate(),
+          start: formData.start,
+          end: formData.end,
+          title: formData.title,
+          repeat: formData.repeat,
+        });
+      }
+    }
+
+    // Save all events to server and update UI
+    newEvents.forEach((ev) => {
+      fetch("/api/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(ev),
       })
-      .catch((err) => console.error("Failed to save event:", err));
+        .then((res) => res.json())
+        .then((data) =>
+          setEvents((prev) => [
+            ...prev,
+            { ...ev, id: data.id || Date.now() + Math.random() },
+          ])
+        )
+        .catch((err) => console.error("Failed to save event:", err));
+    });
+
+    setSelectedDay(null);
   };
 
   const handleDeleteEvent = (id) => {
@@ -154,24 +190,22 @@ export default function Schedule() {
             );
 
           const totalHoursUsed = dayEvents.reduce((sum, ev) => {
-          const start = parseInt(ev.start.split(":")[0]);
-          const end = parseInt(ev.end.split(":")[0]);
-          return sum + (end - start);
+            const start = parseInt(ev.start.split(":")[0]);
+            const end = parseInt(ev.end.split(":")[0]);
+            return sum + (end - start);
           }, 0);
-          
+
           const isFullDay = totalHoursUsed >= 8;
 
           return (
-              <div
-                key={day}
-                className={`schedule-grid-row ${
-                  selectedDay === day ? "selected-day" : ""
-                } ${isFullDay ? "full-day" : ""}`}
-                onClick={() => handleSelectDay(day)}
-              >
-              <div
-                className={`grid-label ${isWeekend ? "weekend-day" : ""}`}
-              >
+            <div
+              key={day}
+              className={`schedule-grid-row ${
+                selectedDay === day ? "selected-day" : ""
+              } ${isFullDay ? "full-day" : ""}`}
+              onClick={() => handleSelectDay(day)}
+            >
+              <div className={`grid-label ${isWeekend ? "weekend-day" : ""}`}>
                 {monthName.slice(0, 3)} {day}
               </div>
 
@@ -218,6 +252,9 @@ export default function Schedule() {
                       onDoubleClick={() => handleDeleteEvent(ev.id)}
                     >
                       {ev.title}
+                      {ev.repeat !== "none" && (
+                        <span className="repeat-icon"> 🔁</span>
+                      )}
                     </div>
                   );
 
@@ -290,6 +327,18 @@ export default function Schedule() {
                 }
                 required
               />
+              <label>Repeat:</label>
+              <select
+                value={formData.repeat}
+                onChange={(e) =>
+                  setFormData({ ...formData, repeat: e.target.value })
+                }
+              >
+                <option value="none">No Repeat</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
             </div>
             <button type="submit">Add Event</button>
           </form>
