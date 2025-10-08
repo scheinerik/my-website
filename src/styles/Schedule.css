@@ -38,13 +38,13 @@
 
 .schedule-grid-header {
   display: grid;
-  grid-template-columns: 120px repeat(24, 1fr);
+  grid-template-columns: 120px repeat(16, 1fr);
   min-height: 35px;
   position: relative;
 }
 .schedule-grid-row {
   display: grid;
-  grid-template-columns: 120px repeat(24, 1fr);
+  grid-template-columns: 120px repeat(16, 1fr);
   align-items: center;
   position: relative;
 }
@@ -74,6 +74,7 @@
   color: #9da9c2;
   font-style: italic;
   text-align: center;
+  display:none;
 }
 
 .weekend-cell {
@@ -156,3 +157,4 @@
   align-items: center;
   gap: 0.5rem;
 }
+
