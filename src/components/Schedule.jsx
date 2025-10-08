@@ -19,7 +19,7 @@ export default function Schedule() {
     repeat: "none",
   });
 
-  // Update current Manila time every minute
+  // Update Manila time every minute
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(getManilaTime()), 60000);
     return () => clearInterval(interval);
@@ -65,9 +65,15 @@ export default function Schedule() {
 
   const handleSelectDay = (day) => {
     setSelectedDay(day);
-    setFormData({ title: "", start: "10:00", end: "11:00", repeat: "none" });
+    setFormData({
+      title: "",
+      start: "10:00",
+      end: "11:00",
+      repeat: "none",
+    });
   };
 
+  // Add event (with repeat support)
   const addEvent = (e) => {
     e.preventDefault();
     if (!selectedDay) return alert("Please select a day first.");
@@ -77,8 +83,8 @@ export default function Schedule() {
     if (eh <= sh) return alert("End time must be after start time.");
 
     const newEvents = [];
+    const repeatGroupId = formData.repeat !== "none" ? Date.now() : null;
 
-    // Base event
     const baseEvent = {
       year: currentYear,
       month: currentMonth,
@@ -87,12 +93,13 @@ export default function Schedule() {
       end: formData.end,
       title: formData.title,
       repeat: formData.repeat,
+      repeatId: repeatGroupId,
     };
     newEvents.push(baseEvent);
 
     // Generate repeating events
     if (formData.repeat !== "none") {
-      const repeatCount = 30; // how many future occurrences to generate
+      const repeatCount = 30; // Generate 30 future instances
       for (let i = 1; i <= repeatCount; i++) {
         const date = new Date(currentYear, currentMonth, selectedDay);
 
@@ -112,11 +119,12 @@ export default function Schedule() {
           end: formData.end,
           title: formData.title,
           repeat: formData.repeat,
+          repeatId: repeatGroupId,
         });
       }
     }
 
-    // Save all events to server and update UI
+    // Save all events
     newEvents.forEach((ev) => {
       fetch("/api/events", {
         method: "POST",
@@ -136,8 +144,29 @@ export default function Schedule() {
     setSelectedDay(null);
   };
 
+  // Delete event (with repeat group option)
   const handleDeleteEvent = (id) => {
-    if (!window.confirm("Delete this event?")) return;
+    const targetEvent = events.find((e) => e.id === id);
+    if (!targetEvent) return;
+
+    if (targetEvent.repeat && targetEvent.repeat !== "none" && targetEvent.repeatId) {
+      const choice = window.confirm(
+        "This event is part of a repeating series.\n\nClick OK to delete ALL repeated events, or Cancel to delete only this one."
+      );
+
+      if (choice) {
+        // Delete all in this repeat group
+        fetch(`/api/events?repeatId=${targetEvent.repeatId}`, { method: "DELETE" })
+          .then((res) => res.json())
+          .then(() =>
+            setEvents((prev) => prev.filter((e) => e.repeatId !== targetEvent.repeatId))
+          )
+          .catch((err) => console.error("Failed to delete repeat series:", err));
+        return;
+      }
+    }
+
+    // Delete only this event
     fetch(`/api/events?id=${id}`, { method: "DELETE" })
       .then((res) => res.json())
       .then(() => setEvents((prev) => prev.filter((e) => e.id !== id)))
@@ -262,7 +291,7 @@ export default function Schedule() {
                   currentHour = end;
                 }
 
-                // Fill remaining hours after last event
+                // Fill remaining hours
                 for (; currentHour < 24; currentHour++) {
                   const isPast =
                     isCurrentMonth &&
