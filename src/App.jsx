@@ -4,6 +4,7 @@ import Hero from "./components/Hero";
 import About from "./components/About";
 import Footer from "./components/Footer";
 import Schedule from "./components/Schedule";
+import Contact from "./components/Contact";
 import "./index.css";
 import HomeCalendar from "./components/HomeCalendar";
 
@@ -14,6 +15,7 @@ export default function App() {
         <Hero />
         <About />
         <HomeCalendar />
+        <Contact />
       </main>
     </>
   );
